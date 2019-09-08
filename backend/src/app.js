@@ -1,5 +1,6 @@
 import express from 'express';
 import Youch from 'youch';
+import { resolve } from 'path';
 import 'express-async-errors';
 import routes from './routes';
 
@@ -15,6 +16,10 @@ class App {
 
   midlewares() {
     this.server.use(express.json());
+    this.server.use(
+      '/files',
+      express.static(resolve(__dirname, '..', 'tmp', 'uploads'))
+    );
   }
 
   routes() {
