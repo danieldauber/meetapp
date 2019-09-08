@@ -8,6 +8,8 @@ const routes = new Router();
 routes.post('/auth', SessionController.store);
 routes.use(authMiddleware);
 
+routes.get('/users', UserController.index);
 routes.post('/users', UserController.store);
+routes.put('/users/:userId', UserController.update);
 
 export default routes;
