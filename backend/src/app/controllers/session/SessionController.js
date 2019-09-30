@@ -7,15 +7,15 @@ class SessionController {
   async store(req, res) {
     const schema = Yup.object().shape({
       email: Yup.string()
-        .email()
-        .required(),
-      password: Yup.string().required(),
+        .email('O email não é valido')
+        .required('O email é requerido'),
+      password: Yup.string().required('A senha é requerida'),
     });
 
     if (!(await schema.isValid(req.body))) {
       const e = [];
       await schema.validate(req.body).catch(err => {
-        e.push({ ...err });
+        e.push({ error: err.message });
       });
       return res.status(400).json(e);
     }
