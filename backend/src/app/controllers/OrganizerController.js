@@ -1,4 +1,4 @@
-import Meetup from '../../models/meetup/Meetup';
+import Meetup from '../models/Meetup';
 
 class OrganizerController {
   async index(req, res) {

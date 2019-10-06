@@ -1,6 +1,6 @@
 import * as Yup from 'yup';
-import User from '../../models/user/User';
-import File from '../../models/files/File';
+import User from '../models/User';
+import File from '../models/File';
 
 class UserController {
   async index(req, res) {
@@ -17,22 +17,6 @@ class UserController {
   }
 
   async store(req, res) {
-    const schema = Yup.object().shape({
-      name: Yup.string().required(),
-      email: Yup.string()
-        .email()
-        .required(),
-      password: Yup.string().required(),
-    });
-
-    if (!(await schema.isValid(req.body))) {
-      const e = [];
-      await schema.validate(req.body).catch(err => {
-        e.push({ ...err });
-      });
-      return res.status(400).json(e);
-    }
-
     const { email } = req.body;
 
     const result = await User.findOrCreate({
@@ -52,34 +36,10 @@ class UserController {
   }
 
   async update(req, res) {
-    const schema = Yup.object().shape({
-      name: Yup.string(),
-      email: Yup.string().email(),
-      oldPassword: Yup.string(),
-      password: Yup.string().when('oldPassword', (oldPassword, field) =>
-        oldPassword ? field.required() : field
-      ),
-      confirmPassword: Yup.string().when('password', (password, field) =>
-        password ? field.required().oneOf([Yup.ref('password')]) : field
-      ),
-    });
-
-    if (!(await schema.isValid(req.body))) {
-      const e = [];
-      await schema.validate(req.body).catch(err => {
-        e.push({ ...err });
-      });
-      return res.status(400).json(e);
-    }
-
     const { email, oldPassword } = req.body;
     const { userId } = req.params;
 
-    const userUpdate = await User.findOne({
-      where: {
-        id: userId,
-      },
-    });
+    const userUpdate = await User.findByPk(userId);
 
     if (!userUpdate) {
       return res.status(401).json({ error: 'user does not exists' });
@@ -101,9 +61,19 @@ class UserController {
       return res.status(401).json({ error: 'old password does not match' });
     }
 
-    const { id, name } = await userUpdate.update(req.body);
+    await userUpdate.update(req.body);
 
-    return res.json({ id, name, email });
+    const { id, name, avatar } = await User.findByPk(userId, {
+      include: [
+        {
+          model: File,
+          as: 'avatar',
+          attributes: ['id', 'path', 'url'],
+        },
+      ],
+    });
+
+    return res.json({ id, name, email, avatar });
   }
 }
 
