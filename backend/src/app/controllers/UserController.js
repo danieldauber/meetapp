@@ -1,6 +1,7 @@
-import * as Yup from 'yup';
 import User from '../models/User';
 import File from '../models/File';
+import UserExistsService from '../services/UserExistsService';
+import UserUpdateService from '../services/UserUpdateService';
 
 class UserController {
   async index(req, res) {
@@ -19,49 +20,27 @@ class UserController {
   async store(req, res) {
     const { email } = req.body;
 
-    const result = await User.findOrCreate({
-      where: {
-        email,
-      },
-      defaults: req.body,
-    }).spread((user, created) => {
-      if (created) {
-        const { id, name } = user;
-        return { id, name, email };
-      }
-      return { error: 'User already exists' };
-    });
+    await UserExistsService.run({ email });
 
-    return res.json(result);
+    const { id, name } = await User.create(req.body);
+
+    return res.json({
+      id,
+      name,
+      email,
+    });
   }
 
   async update(req, res) {
-    const { email, oldPassword } = req.body;
+    const { email, old_password } = req.body;
     const { userId } = req.params;
 
-    const userUpdate = await User.findByPk(userId);
-
-    if (!userUpdate) {
-      return res.status(401).json({ error: 'user does not exists' });
-    }
-
-    if (email !== userUpdate.email) {
-      const userExists = await User.findOne({
-        where: {
-          email,
-        },
-      });
-
-      if (userExists) {
-        return res.status('401').json({ error: 'Email already in use' });
-      }
-    }
-
-    if (oldPassword && !(await userUpdate.checkPassword(oldPassword))) {
-      return res.status(401).json({ error: 'old password does not match' });
-    }
-
-    await userUpdate.update(req.body);
+    await UserUpdateService.run({
+      email,
+      oldPassword: old_password,
+      userId,
+      body: req.body,
+    });
 
     const { id, name, avatar } = await User.findByPk(userId, {
       include: [
