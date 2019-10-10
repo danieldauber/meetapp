@@ -2,7 +2,7 @@ import User from '../models/User';
 
 class UserExistsService {
   async run({ email }) {
-    const userExists = await User.findAll({
+    const userExists = await User.findOne({
       where: {
         email,
       },

@@ -36,10 +36,10 @@ routes.post(
   SessionStoreValidator,
   SessionController.store
 );
+routes.post('/users', UserStoreValidator, UserController.store);
 routes.use(authMiddleware);
 
 routes.get('/users', UserController.index);
-routes.post('/users', UserStoreValidator, UserController.store);
 routes.put('/users/:userId', UserUpdateValidator, UserController.update);
 
 routes.post('/files', upload.single('file'), FileController.store);
